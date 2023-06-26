@@ -17,6 +17,8 @@ class Piramide: public Objeto{
         float ry = 0;
         float rz = 0;
 
+        bool isShadowVisible = true;
+
         vector<int> rgbT = {2,1,0};
         vector<int> rgbF = {0,1,0};
 
@@ -24,8 +26,11 @@ class Piramide: public Objeto{
         vector<vector<int>> rgbTelhados = {{0,1,0},{1,1,0},{0,1,1}};
     public:
         void DesenharPiramide();
+        void mostrarSombra();
 };
-
+void Piramide::mostrarSombra() {
+    this->isShadowVisible = !this->isShadowVisible;
+}
 void Piramide::DesenharPiramide(){
 
     glPushMatrix();

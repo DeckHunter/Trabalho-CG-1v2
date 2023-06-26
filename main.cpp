@@ -21,6 +21,11 @@ vector<string> dbObjetoAtual;
 
 float x = 0.0;
 
+vector<size_t> pontosSelecionados;
+
+size_t pontoSelecionado = 0;
+
+
 float px;
 float py;
 float pz;
@@ -37,6 +42,8 @@ float sz = 0.5;
 float theta;
 float thetaG;
 
+double animacao_sol = 0;
+
 int posCameraAtual = 0;
 int posAtual = 0;
 int posAtualNaLista = 0;
@@ -50,6 +57,10 @@ bool abrirSelecionarCameraObj = false;
 bool abrirSelecionarObjEmCena = false;
 bool abrirSelecionarCorP = false;
 bool abrirSelecionarCorS = false;
+
+bool pontual = false;
+bool selecionadoMostrarSombra = false;
+bool mostrarViewPorts = false;
 
 string action = "null";
 
@@ -90,12 +101,12 @@ Piramide piramideObjAux;
 void configs(){
 
     GUI::setLight(0, 0,2,0, true, false);
-    GUI::setColor(0.4,0.6,0);
-    GUI::drawFloor(15,15);
-    GUI::drawOrigin(0.5);
+        GUI::setColor(0.4,0.6,0);
+        GUI::drawFloor(15,15);
+        GUI::drawOrigin(0.49);
     glDisable(GL_CULL_FACE);
-
 }
+
 
 void desenharTodosObjetosEmCena(){
     for (int i = 0; i < casas.size(); i++) {
@@ -230,30 +241,238 @@ void mudarCorS(string obj){
         }
     }
 }
+void mostraSombras( GLfloat plano[4], float lightPos[4] ) {
+    if (selecionadoMostrarSombra) {
+        bool aux = glutGUI::draw_eixos;
+        glutGUI::draw_eixos = false;
+
+        // --------------------------------------------------- //
+        for (size_t i = 0; i < arvores.size(); i++) {
+            glDisable(GL_LIGHTING);
+            glColor4d(0.0,0.0,0.0,0.8);
+
+            GLfloat sombra[4][4];
+
+            glPushMatrix();
+                GUI::shadowMatrix(sombra,plano,lightPos);
+                glMultTransposeMatrixf( (GLfloat*)sombra );
+
+                if ( arvores[i]->isShadowVisible ) {
+                    arvores[i]->DesenharArvore();
+                }
+
+                glEnable(GL_LIGHTING);
+            glPopMatrix();
+        }
+        // --------------------------------------------------- //
+        for (size_t i = 0; i < casas.size(); i++) {
+            glDisable(GL_LIGHTING);
+            glColor4d(0.0,0.0,0.0,0.8);
+
+            GLfloat sombra[4][4];
+
+            glPushMatrix();
+                GUI::shadowMatrix(sombra,plano,lightPos);
+                glMultTransposeMatrixf( (GLfloat*)sombra );
+
+                if ( casas[i]->isShadowVisible ) {
+                    casas[i]->DesenharCasinha();
+                }
+
+                glEnable(GL_LIGHTING);
+            glPopMatrix();
+        }
+        // --------------------------------------------------- //
+        for (size_t i = 0; i < bandeiras.size(); i++) {
+            glDisable(GL_LIGHTING);
+            glColor4d(0.0,0.0,0.0,0.8);
+
+            GLfloat sombra[4][4];
+
+            glPushMatrix();
+                GUI::shadowMatrix(sombra,plano,lightPos);
+                glMultTransposeMatrixf( (GLfloat*)sombra );
+
+                if ( bandeiras[i]->isShadowVisible ) {
+                    bandeiras[i]->DesenharBandeira();
+                }
+
+                glEnable(GL_LIGHTING);
+            glPopMatrix();
+        }
+        // --------------------------------------------------- //
+        for (size_t i = 0; i < postes.size(); i++) {
+            glDisable(GL_LIGHTING);
+            glColor4d(0.0,0.0,0.0,0.8);
+
+            GLfloat sombra[4][4];
+
+            glPushMatrix();
+                GUI::shadowMatrix(sombra,plano,lightPos);
+                glMultTransposeMatrixf( (GLfloat*)sombra );
+
+                if ( postes[i]->isShadowVisible ) {
+                    postes[i]->DesenharPoste();
+                }
+
+                glEnable(GL_LIGHTING);
+            glPopMatrix();
+        }
+        // --------------------------------------------------- //
+        for (size_t i = 0; i < piramides.size(); i++) {
+            glDisable(GL_LIGHTING);
+            glColor4d(0.0,0.0,0.0,0.8);
+
+            GLfloat sombra[4][4];
+
+            glPushMatrix();
+                GUI::shadowMatrix(sombra,plano,lightPos);
+                glMultTransposeMatrixf( (GLfloat*)sombra );
+
+                if ( piramides[i]->isShadowVisible ) {
+                    piramides[i]->DesenharPiramide();
+                }
+
+                glEnable(GL_LIGHTING);
+            glPopMatrix();
+        }
+        // --------------------------------------------------- //
+        glutGUI::draw_eixos = aux;
+    }
+}
+
+void mostrarSombrasNosPlanos() {
+    float lightPos[4] = {glutGUI::lx,glutGUI::ly,glutGUI::lz,pontual ? 1.0f : 0.0f};
+
+    GUI::setLight(0,lightPos[0],lightPos[1],lightPos[2],true,false,false,false,pontual);
+    GLfloat plano1[4] = {0,1,0, -0.001};
+    mostraSombras(plano1, lightPos);
+
+    // parede lateral
+    GUI::setColor(138.0/255, 89.0/255, 6.0/255);
+    glPushMatrix();
+        glTranslatef(3,0,0);
+        glRotatef(90, 0,0,1);
+        glScalef(2,2,2);
+        GUI::drawQuad();
+    glPopMatrix();
+    GLfloat plano2[4] = {-1,0,0, 3.00-0.001};
+    mostraSombras(plano2, lightPos);
+
+    // parede frontal
+    GUI::setColor(138.0/255, 89.0/255, 6.0/255);
+    glPushMatrix();
+        glTranslatef(0,0,2);
+        glRotatef(-90, 1,0,0);
+        glScalef(2,2,2);
+        GUI::drawQuad();
+    glPopMatrix();
+    GLfloat plano3[4] = {0,0,-1, 2.00-0.001};
+    mostraSombras(plano3, lightPos);
+
+    // parede inclinada
+    GUI::setColor(0.0,0.5,0.0);
+    glPushMatrix();
+        glTranslatef(1.5,0,0);
+        glRotatef(45, 0,0,1);
+        glScalef(2,2,2);
+        GUI::drawQuad();
+    glPopMatrix();
+    GLfloat plano4[4] = {-1,1,0, 1.50-0.001};
+    mostraSombras(plano4, lightPos);
+}
+
+// ---------- ViewPorts ----------
+
+void desenhaComViewPorts() {
+    Vetor3D olho1, olho2, olho3;
+    Vetor3D centro1, centro2, centro3;
+    Vetor3D up1, up2, up3;
+
+    GUI::displayInit();
+
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        glViewport(glutGUI::width/2, 0, glutGUI::width/2, glutGUI::height/2);
+        gluLookAt(glutGUI::cam->e.x,glutGUI::cam->e.y,glutGUI::cam->e.z,glutGUI::cam->c.x,glutGUI::cam->c.y,glutGUI::cam->c.z,glutGUI::cam->u.x,glutGUI::cam->u.y,glutGUI::cam->u.z);
+        configs();
+        desenharTodosObjetosEmCena();
+
+        if (selecionadoMostrarSombra) {
+            mostrarSombrasNosPlanos();
+        }
+
+        glLoadIdentity();
+        glViewport(0, glutGUI::height/2, glutGUI::width/2, glutGUI::height/2);
+        olho1 = Vetor3D(0, 10, 0);
+        centro1 = Vetor3D(0, 0, 0);
+        up1 = Vetor3D(0,0,1);
+        gluLookAt(olho1.x,olho1.y,olho1.z, centro1.x,centro1.y,centro1.z, up1.x,up1.y,up1.z);
+        configs();
+        desenharTodosObjetosEmCena();
+
+        if (selecionadoMostrarSombra) {
+            mostrarSombrasNosPlanos();
+        }
+
+        glLoadIdentity();
+        glViewport(0, 0, glutGUI::width/2, glutGUI::height/2);
+        olho2 = Vetor3D(0, 1, 10);
+        centro2 = Vetor3D(0, 1, 0);
+        up2 = Vetor3D(0,1,0);
+        gluLookAt(olho2.x,olho2.y,olho2.z, centro2.x,centro2.y,centro2.z, up2.x,up2.y,up2.z);
+        configs();
+        desenharTodosObjetosEmCena();
+
+        if (selecionadoMostrarSombra) {
+            mostrarSombrasNosPlanos();
+        }
+
+        glLoadIdentity();
+        glViewport(glutGUI::width/2, glutGUI::height/2, glutGUI::width/2, glutGUI::height/2);
+        olho3 = Vetor3D(10, 1, 0);
+        centro3 = Vetor3D(0, 1, 0);
+        up3 = Vetor3D(0,1,0);
+        gluLookAt(olho3.x,olho3.y,olho3.z, centro3.x,centro3.y,centro3.z, up3.x,up3.y,up3.z);
+        configs();
+        desenharTodosObjetosEmCena();
+
+        if (selecionadoMostrarSombra) {
+            mostrarSombrasNosPlanos();
+        }
+
+    GUI::displayEnd();
+}
+// --------------------------------
+
 void desenha() {
     GUI::displayInit();
 
+    if (selecionadoMostrarSombra) {
+        mostrarSombrasNosPlanos();
+    }
     switch (posCameraAtual) {
-        case 0:
-            CameraJogo();
+        case 0 :
+            glLoadIdentity();
+            gluLookAt(glutGUI::cam->e.x,glutGUI::cam->e.y,glutGUI::cam->e.z, glutGUI::cam->c.x,glutGUI::cam->c.y,glutGUI::cam->c.z, glutGUI::cam->u.x,glutGUI::cam->u.y,glutGUI::cam->u.z);
             break;
         case 1:
-            gluLookAt(0,5,8 ,  0,0,0 , 0,1,0);
+            glutGUI::cam = new CameraDistante(-9,9,9, 0,0,0, 0,1,0);
             break;
         case 2:
-            gluLookAt(10,5,8 ,  0,0,0 , 0,1,0);
+            glutGUI::cam = new CameraDistante(9,9,9, 0,0,0, 0,1,0);
             break;
         case 3:
-            gluLookAt(-10,5,8 ,  0,0,0 , 0,1,0);
+            glutGUI::cam = new CameraDistante(9,9,-9, 0,0,0, 0,1,0);
             break;
         case 4:
-            gluLookAt(0,5,-10 ,  0,0,0 , 0,1,0);
+            glutGUI::cam = new CameraDistante(-9,9,-9, 0,0,0, 0,1,0);
             break;
         case 5:
-            gluLookAt(0,1,5 ,  0,2,0 , 0,1,0);
+            glutGUI::cam = new CameraDistante(5,5,5, 0,0,0, 0,1,0);
             break;
         case 6:
-            gluLookAt(6,8,0 ,  0,0,0 , 0,1,0);
+            glutGUI::cam = new CameraDistante(0.01,25,0.01, 0,0,0, 0,1,0);
             break;
     }
     configs();
@@ -279,7 +498,11 @@ void desenha() {
         glutGUI::trans_obj = false;
     }
 
-    desenharTodosObjetosEmCena();
+    if (mostrarViewPorts) {
+        desenhaComViewPorts();
+    } else {
+        desenharTodosObjetosEmCena();
+    }
 
     if(action == "translação"){
         if(objSelecionado == "Casa"){
@@ -1076,10 +1299,79 @@ void  moverVetorCamera(int i){
         posCameraAtual = (cameras.size() -1);
     }
 }
+void desenhaPontosDeControle()
+{
+    for (size_t i=0; i < casas.size(); i++) {
+        glPushName(casas[i]->getId());
+            casas[i]->DesenharCasinha();
+        glPopName();
+        pontosSelecionados.push_back(casas[i]->getId());
+    }
+
+    for (size_t i=0; i < bandeiras.size(); i++) {
+        glPushName(bandeiras[i]->getId());
+            bandeiras[i]->DesenharBandeira();
+        glPopName();
+        pontosSelecionados.push_back(bandeiras[i]->getId());
+    }
+
+    for (size_t i=0; i < postes.size(); i++) {
+        glPushName(bandeiras[i]->getId());
+            postes[i]->DesenharPoste();
+        glPopName();
+        pontosSelecionados.push_back(postes[i]->getId());
+    }
+
+    for (size_t i=0; i < arvores.size(); i++) {
+        glPushName(arvores[i]->getId());
+            arvores[i]->DesenharArvore();
+        glPopName();
+        pontosSelecionados.push_back(arvores[i]->getId());
+
+    }
+
+    for (size_t i=0; i < piramides.size(); i++) {
+        pontosSelecionados.push_back(piramides[i]->getId());
+        glPushName(piramides[i]->getId());
+            piramides[i]->DesenharPiramide();
+        glPopName();
+    }
+}
+
+int picking( GLint cursorX, GLint cursorY, int w, int h ) {
+    int BUFSIZE = 512;
+    GLuint selectBuf[512];
+    GUI::pickingInit(cursorX,cursorY,w,h,selectBuf,BUFSIZE);
+    GUI::displayInit();
+    desenhaPontosDeControle();
+    return GUI::pickingClosestName(selectBuf,BUFSIZE);
+}
+
+void mouse(int button, int state, int x, int y) {
+    GUI::mouseButtonInit(button,state,x,y);
+    if (button == GLUT_LEFT_BUTTON) {
+        if (state == GLUT_DOWN) {
+            int pick = picking( x, y, 5, 5 );
+            if (pick != 0) {
+                pontoSelecionado = pick;
+                cout << "If : " << pontoSelecionado << endl;
+                glutGUI::lbpressed = false;
+            }else{
+                cout << "Else : " << pontoSelecionado << endl;
+            }
+        }
+    }
+}
 void teclado(unsigned char tecla, int mx, int my) {
     GUI::keyInit(tecla, mx,my);
 
     switch (tecla) {
+        case 'w':
+            glutGUI::perspective = !glutGUI::perspective;
+            break;
+        case 'y':
+            mostrarViewPorts = !mostrarViewPorts;
+        break;
         case '=':
             if(abrirSelecionarCameraObj){
                 abrirSelecionarCameraObj = false;
@@ -1223,25 +1515,25 @@ void teclado(unsigned char tecla, int mx, int my) {
             abrirSelecionarNovoObj = false;
             abrirSelecionarObjEmCena = false;
             break;
-            case ';':
-                if(abrirSelecionarNovoObj){
-                    if(objetosEscolhas[posAtualNaLista] == 0){
-                        addCasa(0,0,0);
-                    }
-                    if(objetosEscolhas[posAtualNaLista] == 1){
-                        addArvore(0,0,0);
-                    }
-                    if(objetosEscolhas[posAtualNaLista] == 2){
-                        addPoste(0,0,0);;
-                    }
-                    if(objetosEscolhas[posAtualNaLista] == 3){
-                        addBandeira(0,0,0);
-                    }
-                    if(objetosEscolhas[posAtualNaLista] == 4){
-                        addPiramide(0,0,0);
-                    }
+        case ';':
+            if(abrirSelecionarNovoObj){
+                if(objetosEscolhas[posAtualNaLista] == 0){
+                    addCasa(0,0,0);
                 }
-                break;
+                if(objetosEscolhas[posAtualNaLista] == 1){
+                    addArvore(0,0,0);
+                }
+                if(objetosEscolhas[posAtualNaLista] == 2){
+                    addPoste(0,0,0);;
+                }
+                if(objetosEscolhas[posAtualNaLista] == 3){
+                    addBandeira(0,0,0);
+                }
+                if(objetosEscolhas[posAtualNaLista] == 4){
+                    addPiramide(0,0,0);
+                }
+            }
+            break;
         case 's':
             action = "scala";
             setXYZ(objSelecionado);
@@ -1281,13 +1573,31 @@ void teclado(unsigned char tecla, int mx, int my) {
                 deletarObjSelecionado(objSelecionado);
             }
             break;
-        default:
-            break;
+        case 'm':
+            selecionadoMostrarSombra = !selecionadoMostrarSombra;
+        break;
         }
     }
 
 int main()
 {
     Carregar();
-    GUI gui = GUI(800,600,desenha,teclado);
+    GUI gui = GUI(800,600,desenha,teclado,mouse);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -19,6 +19,8 @@ class Bandeira:public Objeto{
 
         float ryF = 0;
 
+        bool isShadowVisible = true;
+
         vector<int> rgbM = {2,1,0};
         vector<int> rgbB = {0,1,0};
 
@@ -26,8 +28,11 @@ class Bandeira:public Objeto{
         vector<vector<int>> rgbBandeiras = {{0,1,0},{1,1,0},{0,1,1}};
     public:
         void DesenharBandeira();
+        void mostrarSombra();
 };
-
+void Bandeira::mostrarSombra() {
+    this->isShadowVisible = !this->isShadowVisible;
+}
 void Bandeira::DesenharBandeira(){
 
         GUI::setColor(rgbM[0],rgbM[1],rgbM[2], 1,true);

@@ -19,6 +19,8 @@ class Poste: public Objeto{
 
         float sxF = 0;
 
+        bool isShadowVisible = true;
+
         vector<int> rgbM = {2,1,0};
         vector<int> rgbL = {0,1,0};
 
@@ -26,8 +28,11 @@ class Poste: public Objeto{
         vector<vector<int>> rgbLuzes = {{0,1,0},{1,1,0},{0,1,1}};
     public:
         void DesenharPoste();
+        void mostrarSombra();
 };
-
+void Poste::mostrarSombra() {
+    this->isShadowVisible = !this->isShadowVisible;
+}
 void Poste::DesenharPoste(){
     GUI::setColor(rgbM[0],rgbM[1],rgbM[2], 1,true);
 

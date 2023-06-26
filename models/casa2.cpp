@@ -18,6 +18,8 @@ class Casa2:public Objeto{
         float ry = 0;
         float rz = 0;
 
+        bool isShadowVisible = true;
+
         vector<int> rgbB = {2,1,0};
         vector<int> rgbT = {0,1,0};
 
@@ -26,7 +28,11 @@ class Casa2:public Objeto{
 
     public:
         void DesenharCasinha();
+        void mostrarSombra();
 };
+void Casa2::mostrarSombra() {
+    this->isShadowVisible = !this->isShadowVisible;
+}
 
 void Casa2::DesenharCasinha(){
 

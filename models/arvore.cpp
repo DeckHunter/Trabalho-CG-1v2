@@ -17,15 +17,21 @@ class Arvore: public Objeto{
         float ry = 0;
         float rz = 0;
 
+        bool isShadowVisible = true;
+
         vector<int> rgbT = {2,1,0};
         vector<int> rgbF = {0,1,0};
 
         vector<vector<int>> rgbTroncos = {{2,1,0},{1,2,0},{1,1,1}};
         vector<vector<int>> rgbFolhas = {{0,1,0},{1,1,0},{0,1,1}};
+
     public:
         void DesenharArvore();
+        void mostrarSombra();
 };
-
+void Arvore::mostrarSombra() {
+    this->isShadowVisible = !this->isShadowVisible;
+}
 void Arvore::DesenharArvore(){
 
     //================| Tronco |================//
