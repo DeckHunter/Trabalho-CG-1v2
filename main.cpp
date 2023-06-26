@@ -25,7 +25,6 @@ vector<size_t> pontosSelecionados;
 
 size_t pontoSelecionado = 0;
 
-
 float px;
 float py;
 float pz;
@@ -43,6 +42,8 @@ float theta;
 float thetaG;
 
 double animacao_sol = 0;
+
+bool mouseUse = false;
 
 int posCameraAtual = 0;
 int posAtual = 0;
@@ -1337,6 +1338,119 @@ void desenhaPontosDeControle()
         glPopName();
     }
 }
+void limparDuplicados(){
+    sort( pontosSelecionados.begin(), pontosSelecionados.end() );
+    pontosSelecionados.erase( unique( pontosSelecionados.begin(), pontosSelecionados.end() ), pontosSelecionados.end() );
+}
+
+void OnOffSombraDeUmObjeto(int id){
+    for (int i=0; i < casas.size(); i++) {
+        if(casas[i]->getId() == id){
+            if(casas[i]->isShadowVisible){
+                casas[i]->isShadowVisible = false;
+            }else{
+                casas[i]->isShadowVisible = true;
+            }
+        }
+    }
+
+    for (int i=0; i < bandeiras.size(); i++) {
+        if(bandeiras[i]->getId() == id){
+            if(bandeiras[i]->isShadowVisible){
+                bandeiras[i]->isShadowVisible = false;
+            }else{
+                bandeiras[i]->isShadowVisible = true;
+            }
+        }
+    }
+
+    for (int i=0; i < postes.size(); i++) {
+        if(postes[i]->getId() == id){
+            if(postes[i]->isShadowVisible){
+                postes[i]->isShadowVisible = false;
+            }else{
+                postes[i]->isShadowVisible = true;
+            }
+        }
+    }
+
+    for (int i=0; i < arvores.size(); i++) {
+        if(arvores[i]->getId() == id){
+            if(arvores[i]->isShadowVisible){
+                arvores[i]->isShadowVisible = false;
+            }else{
+                arvores[i]->isShadowVisible = true;
+            }
+        }
+    }
+
+    for (int i=0; i < piramides.size(); i++) {
+        if(piramides[i]->getId() == id){
+            if(piramides[i]->isShadowVisible){
+                piramides[i]->isShadowVisible = false;
+            }else{
+                piramides[i]->isShadowVisible = true;
+            }
+        }
+    }
+}
+void selecionarObjetoPorClick(int id){
+    for (int i=0; i < casas.size(); i++) {
+        if(casas[i]->getId() == id){
+            selecionarObjeto(id, "Casa");
+        }
+    }
+
+    for (int i=0; i < bandeiras.size(); i++) {
+        if(bandeiras[i]->getId() == id){
+            selecionarObjeto(id, "Bandeira");
+        }
+    }
+
+    for (int i=0; i < postes.size(); i++) {
+        if(postes[i]->getId() == id){
+            selecionarObjeto(id, "Poste");
+        }
+    }
+
+    for (int i=0; i < arvores.size(); i++) {
+        if(arvores[i]->getId() == id){
+            selecionarObjeto(id, "Arvore");
+        }
+    }
+
+    for (int i=0; i < piramides.size(); i++) {
+        if(piramides[i]->getId() == id){
+            selecionarObjeto(id, "Piramide");
+        }
+    }
+}
+void DescelecionarObjetoComClick(){
+    for (int i=0; i < casas.size(); i++) {
+        casas[i]->select = false;
+        casas[i]->colorRGB = {1,2,3};
+    }
+
+    for (int i=0; i < bandeiras.size(); i++) {
+        bandeiras[i]->select = false;
+        bandeiras[i]->colorRGB = {1,2,3};
+    }
+
+    for (int i=0; i < postes.size(); i++) {
+        postes[i]->select = false;
+        postes[i]->colorRGB = {1,2,3};
+    }
+
+    for (int i=0; i < arvores.size(); i++) {
+        arvores[i]->select = false;
+        arvores[i]->colorRGB = {1,2,3};
+    }
+
+    for (int i=0; i < piramides.size(); i++) {
+        piramides[i]->select = false;
+        piramides[i]->colorRGB = {1,2,3};
+    }
+}
 
 int picking( GLint cursorX, GLint cursorY, int w, int h ) {
     int BUFSIZE = 512;
@@ -1344,20 +1458,42 @@ int picking( GLint cursorX, GLint cursorY, int w, int h ) {
     GUI::pickingInit(cursorX,cursorY,w,h,selectBuf,BUFSIZE);
     GUI::displayInit();
     desenhaPontosDeControle();
+    limparDuplicados();
     return GUI::pickingClosestName(selectBuf,BUFSIZE);
 }
 
 void mouse(int button, int state, int x, int y) {
     GUI::mouseButtonInit(button,state,x,y);
-    if (button == GLUT_LEFT_BUTTON) {
-        if (state == GLUT_DOWN) {
-            int pick = picking( x, y, 5, 5 );
-            if (pick != 0) {
-                pontoSelecionado = pick;
-                cout << "If : " << pontoSelecionado << endl;
-                glutGUI::lbpressed = false;
-            }else{
-                cout << "Else : " << pontoSelecionado << endl;
+
+    if(mouseUse){
+        if (button == GLUT_LEFT_BUTTON) {
+            if (state == GLUT_DOWN) {
+                int pick = picking( x, y, 5, 5 );
+                if (pick != 0) {
+                    pontoSelecionado = pick;
+                    selecionarObjetoPorClick(pontoSelecionado);
+                    glutGUI::lbpressed = false;
+                }else{
+                    DescelecionarObjetoComClick();
+                    indexC = 0;
+                    indexA = 0;
+                    indexP = 0;
+                    indexB = 0;
+                    indexPI = 0;
+
+                    objSelecionado = "";
+
+                }
+            }
+        }
+        if (button == GLUT_RIGHT_BUTTON) {
+            if (state == GLUT_DOWN) {
+                int pick = picking( x, y, 5, 5 );
+                if (pick != 0) {
+                    pontoSelecionado = pick;
+                    OnOffSombraDeUmObjeto(pontoSelecionado);
+                    glutGUI::rbpressed = false;
+                }
             }
         }
     }
@@ -1516,6 +1652,7 @@ void teclado(unsigned char tecla, int mx, int my) {
             abrirSelecionarObjEmCena = false;
             break;
         case ';':
+
             if(abrirSelecionarNovoObj){
                 if(objetosEscolhas[posAtualNaLista] == 0){
                     addCasa(0,0,0);
@@ -1532,6 +1669,8 @@ void teclado(unsigned char tecla, int mx, int my) {
                 if(objetosEscolhas[posAtualNaLista] == 4){
                     addPiramide(0,0,0);
                 }
+            }else{
+                mouseUse = !mouseUse;
             }
             break;
         case 's':
